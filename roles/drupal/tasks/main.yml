@@ -1,0 +1,10 @@
+---
+- name: Test something
+  command: 'echo asdf'
+
+- name: Test on drupal1
+  command: 'echo asdf'
+  when: inventory_hostname=='tdpl1'
+
+- name: Test on both again
+  command: 'echo asdf'

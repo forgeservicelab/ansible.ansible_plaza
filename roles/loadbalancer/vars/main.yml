@@ -1,0 +1,4 @@
+---
+plaza_subdomain: plaza-testing
+certificate_path: tls
+certificate_prefix: forgeservicelab.fi

@@ -1,0 +1,22 @@
+---
+- hosts: exp
+  pre_tasks:
+  - name: Update APT
+    apt:
+      update_cache=yes
+
+- hosts: tlbr
+  roles:
+    - loadbalancer
+
+- hosts: tsql
+  roles:
+    - mysql
+
+- hosts: tnfs
+  roles:
+    - nfs
+
+- hosts: tdpl
+  roles:
+    - drupal

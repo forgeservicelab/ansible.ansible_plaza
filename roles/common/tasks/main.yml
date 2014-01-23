@@ -1,0 +1,12 @@
+---
+- name: Ensure hostname resolution
+  lineinfile:
+    dest=/etc/hosts
+    regexp='^127.0.1.1'
+    line="127.0.1.1{{'\t'}}{{ ansible_hostname }}"
+
+- name: Base packages
+  apt:
+    pkg=ntp
+    state=present
+    update_cache=yes
