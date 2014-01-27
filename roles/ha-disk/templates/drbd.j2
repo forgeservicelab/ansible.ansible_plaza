@@ -20,7 +20,7 @@ resource {{ group_names[1] }} {
 
   on {{ hostvars[host]['ansible_hostname'] }} {
     device        /dev/drbd0;
-    disk          /dev/{{ block_device }}2;
+    disk          /dev/data/{{ group_names[1] }};
     address       {{ hostvars[host]['ansible_default_ipv4']['address'] }}:7788;
     meta-disk     /dev/{{ block_device }}1[0];
   }

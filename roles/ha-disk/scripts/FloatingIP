@@ -1,0 +1,64 @@
+#!/usr/bin/python
+
+import syslog
+import os
+import sys
+import json
+import urllib2
+from novaclient.v1_1.client import Client
+
+METADATA_URL = 'http://169.254.169.254/openstack/latest/meta_data.json'
+
+def get_server():
+    nova = Client(opts['OS_USERNAME'], opts['OS_PASSWORD'], opts['OS_PROJECT'], auth_url=opts['OS_AUTHURL'])
+    return nova.servers.get(json.loads(urllib2.urlopen(METADATA_URL).read())['uuid'])
+
+def start():
+    get_server().add_floating_ip(opts['OS_FLOATIP'])
+
+def stop():
+    try:
+        get_server().remove_floating_ip(opts['OS_FLOATIP'])
+    except ClientException, e:
+        if e.code == 422:
+            pass
+        else:
+            exit(1)
+
+def get_status():
+    addresses = get_server().addresses
+    for k in addresses.keys():
+        for v in addresses[k]:
+            if 'addr' in v and v['addr'] == opts['OS_FLOATIP']:
+                return True
+    return False
+
+def status():
+    exit(0 if get_status() else 7)
+
+def monitor():
+    status()
+
+def unimplemented():
+    syslog.syslog(syslog.LOG_ERR, 'We are not really able to fulfill a request for ' + sys.argv[1])
+    exit(1)
+
+try:
+    commands = {
+    'start': start,
+    'stop': stop,
+    'status': status,
+    'monitor': monitor
+    }
+
+    options = open(os.environ.get('OCF_RESKEY_configfile'),'r')
+    rows = options.readlines()
+    opts = {}
+    for line in rows:
+        k,v = line.split('=')
+        opts[k] = v.strip()
+
+    commands[sys.argv[1]]() if sys.argv[1] in commands else unimplemented()
+except Exception, e:
+    syslog.syslog(syslog.LOG_ERR, e)
+

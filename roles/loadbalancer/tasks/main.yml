@@ -5,9 +5,12 @@
     state=present
 
 - name: Create tls directory for nginx
-  shell:
-    mkdir -p /etc/nginx/tls
-    creates=/etc/nginx/tls
+  file:
+    path=/etc/nginx/tls
+    state=directory
+#  shell:
+#    mkdir -p /etc/nginx/tls
+#    creates=/etc/nginx/tls
 
 - name: Upload certificate file
   copy:

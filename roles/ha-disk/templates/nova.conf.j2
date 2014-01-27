@@ -1,0 +1,5 @@
+OS_USERNAME={{ lookup('file','roles/ha-disk/vars/user') }}
+OS_PASSWORD={{ lookup('file','roles/ha-disk/vars/pwd') }}
+OS_PROJECT={{ lookup('file','roles/ha-disk/vars/project') }}
+OS_AUTHURL=https://forge.csc.fi:5001/v2.0
+OS_FLOATIP={% if group_names[1] == 'tnfs' %}{{ lookup('file','roles/nfs/vars/float_ip') }}{% else %}{{ lookup('file',"roles/mysql/vars/float_ip") }}{% endif %}
