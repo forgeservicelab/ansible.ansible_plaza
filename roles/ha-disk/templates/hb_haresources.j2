@@ -1,1 +1,1 @@
-{{ hostvars[groups[group_names[1]][0]]['ansible_hostname'] }} FloatingIP::/etc/openstack/nova.conf drbddisk::{{ group_names[1] }} Filesystem::/dev/drbd0::/data::ext4 {% if group_names[1] == 'tnfs' %} nfs-kernel-server {% else %} mysql {% endif %}
+{{ hostvars[groups[group_names[0]][0]]['ansible_hostname'] }} FloatingIP::/etc/openstack/nova.conf drbddisk::{{ group_names[0] }} Filesystem::/dev/drbd0::/data::ext4 {{ lookup('file','roles/'+ group_names[0] +'/vars/service') }}

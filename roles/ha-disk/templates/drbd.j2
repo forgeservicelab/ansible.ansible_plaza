@@ -1,7 +1,7 @@
 include "drbd.d/global_common.conf";
 include "drbd.d/*.res";
 
-resource {{ group_names[1] }} {
+resource {{ group_names[0] }} {
   protocol C;
 
   startup {
@@ -16,11 +16,11 @@ resource {{ group_names[1] }} {
     rate 10M;
     al-extents 257;
   }
-{% for host in groups[group_names[1]] %}
+{% for host in groups[group_names[0]] %}
 
   on {{ hostvars[host]['ansible_hostname'] }} {
     device        /dev/drbd0;
-    disk          /dev/data/{{ group_names[1] }};
+    disk          /dev/data/{{ group_names[0] }};
     address       {{ hostvars[host]['ansible_default_ipv4']['address'] }}:7788;
     meta-disk     /dev/{{ block_device }}1[0];
   }

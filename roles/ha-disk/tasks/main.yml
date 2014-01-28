@@ -16,13 +16,13 @@
 - name: Setup the LV Logical Volume
   lvol:
     vg=data
-    lv="{{ group_names[1] }}"
+    lv="{{ group_names[0] }}"
     size=100%VG
 
 - name: Format the Logical Volume
   filesystem:
     fstype=ext4
-    dev="/dev/data/{{ group_names[1] }}"
+    dev="/dev/data/{{ group_names[0] }}"
 
 - name: Is metadata partition zeroed out?
   script: "../scripts/isheadzero.sh -d /dev/{{ block_device}}1 -s 128"
@@ -59,14 +59,14 @@
   changed_when: False
 
 - name: Initialize the DRBD metadata if needed
-  shell: "echo yes | drbdadm create-md {{ group_names[1] }}"
+  shell: "echo yes | drbdadm create-md {{ group_names[0] }}"
   when: "255 == configured.rc"
   notify: restart drbd
 
 - meta: flush_handlers
 
 - name: Invalidate DRBD on secondary node
-  shell: "drbdadm invalidate {{ group_names[1] }}"
+  shell: "drbdadm invalidate {{ group_names[0] }}"
   when: inventory_hostname.endswith('2')
   register: invalidated
   # Don't fail on 'already syncing invalidation error'
@@ -75,7 +75,7 @@
   notify: restart drbd
 
 - name: Set DRBD primary
-  shell: "drbdadm primary {{ group_names[1] }}"
+  shell: "drbdadm primary {{ group_names[0] }}"
   when: inventory_hostname.endswith('1')
   register: primaryset
   changed_when: "0 != primaryset.rc"

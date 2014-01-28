@@ -32,25 +32,35 @@
   - name: Persist sql floating IP var across plays
     shell: "echo '{{ SQL_FLOAT_IP }}' > roles/mysql/vars/float_ip"
 
-- hosts: exp
+- hosts: loadbalancer:drupal:nfs:mysql
+  sudo: True
+  remote_user: debian
   pre_tasks:
   - name: Update APT
     apt:
       update_cache=yes
 
-- hosts: tlbr
+- hosts: loadbalancer
+  sudo: True
+  remote_user: debian
   roles:
     - loadbalancer
 
-- hosts: tsql
+- hosts: mysql
+  sudo: True
+  remote_user: debian
   roles:
     - mysql
 
-- hosts: tnfs
+- hosts: nfs
+  sudo: True
+  remote_user: debian
   roles:
     - nfs
 
-- hosts: tdpl
+- hosts: drupal
+  sudo: True
+  remote_user: debian
   roles:
     - drupal
 
