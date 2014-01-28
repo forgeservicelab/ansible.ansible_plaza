@@ -1,5 +1,5 @@
 OS_USERNAME={{ lookup('file','roles/ha-disk/vars/user') }}
 OS_PASSWORD={{ lookup('file','roles/ha-disk/vars/pwd') }}
 OS_PROJECT={{ lookup('file','roles/ha-disk/vars/project') }}
-OS_AUTHURL=https://forge.csc.fi:5001/v2.0
+OS_AUTHURL=https://cloud.forgeservicelab.fi:5001/v2.0
 OS_FLOATIP={{ lookup('file','roles/'+ group_names[0] +'/vars/float_ip') }}
