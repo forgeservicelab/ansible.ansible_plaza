@@ -1,2 +1,2 @@
 #!/bin/bash
-ansible mysql:nfs -i plaza.inventory.test -u debian -m setup -a "filter='ansible_devices'"
+ansible mysql:nfs -i plaza.inventory.test -m shell -a "ls -l /dev/disk/by-id" -u debian

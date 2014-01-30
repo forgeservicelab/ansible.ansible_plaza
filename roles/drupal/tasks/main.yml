@@ -1,10 +1,162 @@
 ---
-- name: Test something
-  command: 'echo asdf'
+- name: Install NFS client
+  apt:
+    name=nfs-common
+    state=present
 
-- name: Test on drupal1
-  command: 'echo asdf'
-  when: inventory_hostname=='tdpl1'
+- name: Install Apache server
+  apt:
+    name=apache2
+    state=present
 
-- name: Test on both again
-  command: 'echo asdf'
+- name: Install Apache PHP mod
+  apt:
+    name=libapache2-mod-php5
+    state=present
+
+- name: Install PHP gd library
+  apt:
+    name=php5-gd
+    state=present
+
+- name: Install PHP mysql library
+  apt:
+    name=php5-mysql
+    state=present
+
+- name: Enable Apache's mod rewrite
+  shell: a2enmod rewrite
+  notify: restart apache
+
+- name: umount the NFS share in case it's been corrupted by previous configuration
+  mount:
+    name=/var/www
+    src="{{ lookup('file','../../nfs/vars/float_ip') }}:/data/export"
+    fstype=nfs
+    opts="rw,vers=3"
+    state=unmounted
+  notify: restart apache
+
+- name: mount the NFS share
+  mount:
+    name=/var/www
+    src="{{ lookup('file','../../nfs/vars/float_ip') }}:/data/export"
+    fstype=nfs
+    opts="rw,vers=3"
+    state=mounted
+  notify: restart apache
+
+- name: Configure Apache
+  copy:
+    src=../templates/apache.j2
+    dest=/etc/apache2/sites-available/default
+    owner=root
+    group=root
+    mode=0644
+  notify: restart apache
+
+- name: Check whether drupal is already installed
+  stat:
+    path=/var/www/index.php
+  register: drupal
+
+- name: Get drupal
+  shell: wget http://ftp.drupal.org/files/projects/drupal-{{ drupal_version }}.tar.gz
+    chdir=/tmp
+    creates=/tmp/drupal-{{ drupal_version }}.tar.gz
+  when: "primary is defined and not drupal.stat.exists"
+
+- name: Unpack drupal
+  shell: tar xzf drupal-{{ drupal_version }}.tar.gz
+    chdir=/tmp
+    creates=/tmp/drupal-{{ drupal_version }}
+  when: "primary is defined and not drupal.stat.exists"
+
+- name: Move drupal to webserver root
+  shell: mv drupal-{{ drupal_version }}/* /var/www/
+    chdir=/tmp
+  when: "primary is defined and not drupal.stat.exists"
+  notify: restart apache
+
+- name: Move .htaccess
+  shell: mv drupal-{{ drupal_version }}/.htaccess /var/www/
+    chdir=/tmp
+  when: "primary is defined and not drupal.stat.exists"
+  notify: restart apache
+
+- name: Move .gitignore
+  shell: mv drupal-{{ drupal_version }}/.gitignore /var/www/
+    chdir=/tmp
+  ignore_errors: yes
+  when: "primary is defined and not drupal.stat.exists"
+  notify: restart apache
+
+- name: Remove empty drupal directory
+  file:
+    path=/tmp/drupal-{{ drupal_version }}
+    state=absent
+  when: "primary is defined"
+  notify: restart apache
+
+- name: Generate settings.php file
+  shell: cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
+    creates=/var/www/sites/default/settings.php
+  when: "primary is defined"
+  notify: restart apache
+
+- name: Set base_url on settings file
+  lineinfile:
+    dest=/var/www/sites/default/settings.php
+    insertafter="^# \$base_url"
+    line="$base_url http://{{ plaza_domain }};"
+  when: "primary is defined"
+  notify: restart apache
+
+- name: Ensure ownership on drupal installation
+  file:
+    path=/var/www/
+    owner=www-data
+    group=www-data
+    recurse=yes
+    state=directory
+  when: "primary is defined"
+  notify: restart apache
+
+- name: Ensure permissions on settings.php file
+  file:
+    path=/var/www/sites/default/settings.php
+    mode=0644
+  when: "primary is defined"
+
+- name: Ensure permissions on default site folder
+  file:
+    path=/var/www/sites/default
+    mode=0755
+  when: "primary is defined"
+
+- name: Install Python's MySQLdb package
+  apt:
+    name=python-mysqldb
+    state=present
+  when: "primary is defined"
+
+- name: Create drupal's database
+  mysql_db:
+    login_host="{{ lookup('file','../../mysql/vars/float_ip') }}"
+    login_user="root"
+    login_password=""
+    name="{{ drupal_database }}"
+    encoding="utf8"
+  when: "primary is defined"
+
+- name: Create drupal's user
+  mysql_user:
+    login_host="{{ lookup('file','../../mysql/vars/float_ip') }}"
+    login_user="root"
+    login_password=""
+    name="{{ drupal_username }}"
+    host="{{ lookup('file','../../ha-disk/vars/router_ip') }}"
+    password="{{ drupal_passwd }}"
+    priv="{{ drupal_database }}.*:SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES"
+  when: "primary is defined"
+

@@ -2,7 +2,7 @@ logfacility	local0
 keepalive	2
 deadtime	10
 auto_failback	on
-{% if inventory_hostname.endswith('1') %}
+{% if primary is defined %}
 ucast		eth0 {{ hostvars[groups[group_names[0]][1]]['ansible_default_ipv4']['address'] }}
 {% else %}
 ucast		eth0 {{ hostvars[groups[group_names[0]][0]]['ansible_default_ipv4']['address'] }}

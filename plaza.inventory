@@ -3,13 +3,13 @@
 loadbalancer ansible_ssh_host=192.168.128.3
 
 [drupal]
-drupal1 ansible_ssh_host=192.168.128.4
+drupal1 ansible_ssh_host=192.168.128.4 primary=yes
 drupal2 ansible_ssh_host=192.168.128.5
 
 [nfs]
-nfs1 ansible_ssh_host=192.168.128.6
+nfs1 ansible_ssh_host=192.168.128.6 primary=yes
 nfs2 ansible_ssh_host=192.168.128.7
 
 [mysql]
-mysql1 ansible_ssh_host=192.168.128.8
+mysql1 ansible_ssh_host=192.168.128.8 primary=yes
 mysql2 ansible_ssh_host=192.168.128.9

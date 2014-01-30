@@ -22,7 +22,7 @@ resource {{ group_names[0] }} {
     device        /dev/drbd0;
     disk          /dev/data/{{ group_names[0] }};
     address       {{ hostvars[host]['ansible_default_ipv4']['address'] }}:7788;
-    meta-disk     /dev/{{ block_device }}1[0];
+    meta-disk     {{ block_device }}1[0];
   }
 {% endfor %}
 }

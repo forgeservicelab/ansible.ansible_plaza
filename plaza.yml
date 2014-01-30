@@ -17,6 +17,9 @@
   - name: "SQL_FLOAT_IP"
     prompt: "Floating IP for the MySQL cluster"
     private: no
+  - name: "ROUTER_PUBLIC_IP"
+    prompt: "Public IP of the network router"
+    private: no
 
   connection: local
 
@@ -31,6 +34,8 @@
     shell: "echo '{{ NFS_FLOAT_IP }}' > roles/nfs/vars/float_ip"
   - name: Persist sql floating IP var across plays
     shell: "echo '{{ SQL_FLOAT_IP }}' > roles/mysql/vars/float_ip"
+  - name: Persist router IP var across plays
+    shell: "echo '{{ ROUTER_PUBLIC_IP }}' > roles/ha-disk/vars/router_ip"
 
 - hosts: loadbalancer:drupal:nfs:mysql
   sudo: True
@@ -39,6 +44,7 @@
   - name: Update APT
     apt:
       update_cache=yes
+      cache_valid_time=43200
 
 - hosts: loadbalancer
   sudo: True
@@ -88,4 +94,8 @@
   - name: Local cleanup(5)
     file:
       path=roles/mysql/vars/float_ip
+      state=absent
+  - name: Local cleanup(6)
+    file:
+      path=roles/ha-disk/vars/router_ip
       state=absent

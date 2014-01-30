@@ -1,0 +1,109 @@
+---
+- name: Install MySQL server
+  apt:
+    name=mysql-server
+    state=present
+
+- name: Install Python's MySQLdb package
+  apt:
+    name=python-mysqldb
+    state=present
+
+- name: Release heartbeat resources for local configuration
+  service:
+    name=heartbeat
+    state=stopped
+  notify: restart heartbeat
+
+- name: Release DRBD resources for local configuration
+  service:
+    name=drbd
+    state=stopped
+
+- name: Ensure MySQL data directory is mounted for temporary MySQL run
+  stat:
+    path=/data/mysql
+  register: mysql
+  when: "primary is defined"
+
+- name: Temporary mount of the DRBD device
+  mount:
+    name=/data
+    src="/dev/data/{{ group_names[0] }}"
+    fstype=ext4
+    state=mounted
+  when: "primary is defined and not mysql.stat.exists"
+
+- name: Temporarily enable MySQL server to ensure LAN root access
+  service:
+    name=mysql
+    state=started
+  when: "primary is defined and mysql.stat.exists"
+
+- name: Allow root access from nodes on the LAN via the cluster IP
+  mysql_user:
+    host="{{ lookup('file','../../ha-disk/vars/router_ip') }}"
+    name="root"
+    password=""
+    login_user=root
+    login_password=""
+    priv="*.*:ALL,GRANT"
+    state=present
+  when: "primary is defined and mysql.stat.exists"
+  notify: restart heartbeat
+
+- name: Stop and disable MySQL server
+  service:
+    name=mysql
+    enabled=no
+    state=stopped
+  notify: restart heartbeat
+
+- name: Allow MySQL to listen on all interfaces
+  lineinfile:
+    dest=/etc/mysql/my.cnf
+    regexp='^bind-address(.*)'
+    line='# bind-address\1'
+    backrefs=yes
+    state=present
+  notify: restart heartbeat
+
+- name: Create data directory
+  file:
+    path=/data
+    state=directory
+
+- name: Check data symlink
+  stat:
+    path=/var/lib/mysql
+  register: stats
+
+- name: Move the MySQL data to the DRBD device
+  shell: mv /var/lib/mysql/ /data/
+  when: "primary is defined and stats.stat.isdir"
+
+- name: Remove the MySQL data
+  file:
+    path=/var/lib/mysql/
+    state=absent
+  when: "primary is not defined and stats.stat.isdir"
+
+- name: Link the MySQL data from its original location
+  file:
+    src=/data/mysql/
+    dest=/var/lib/mysql
+    state=link
+
+- name: Unmount the DRBD device
+  mount:
+    name=/data
+    src=/dev/drbd0
+    fstype=ext4
+    state=unmounted
+  when: "primary is defined"
+  notify: restart heartbeat
+
+- name: Restart DRBD
+  service:
+    name=drbd
+    state=started

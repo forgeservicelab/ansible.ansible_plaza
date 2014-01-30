@@ -1,5 +1,5 @@
 server {
-	server_name _ {{ plaza_subdomain }}.forgeservicelab.fi;
+	server_name _ {{ plaza_domain }};
 
 	location / {
 		return https://$host$request_uri;
@@ -18,7 +18,7 @@ server {
 #
 server {
 	listen 443;
-	server_name _ {{ plaza_subdomain }}.forgeservicelab.fi;
+	server_name _ {{ plaza_domain }};
 
 	ssl on;
 	ssl_certificate {{ certificate_path }}/{{ certificate_prefix }}.crt;

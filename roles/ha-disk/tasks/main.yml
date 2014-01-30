@@ -1,7 +1,7 @@
 ---
 - name: Partition the data disk
-  shell: 'echo "n\np\n1\n\n+150M\nn\np\n2\n\n\nt\n2\n8e\nw" | fdisk /dev/{{ block_device }}'
-  when: not ansible_devices.{{ block_device }}.partitions
+  shell: 'echo "n\np\n1\n\n+150M\nn\np\n2\n\n\nt\n2\n8e\nw" | fdisk {{ block_device }}'
+  when: "not ansible_devices.{{ block_device.split('/')[2] }}.partitions"
 
 - name: Install LVM
   apt:
@@ -11,7 +11,7 @@
 - name: Setup the LVM Volume Group
   lvg:
     vg=data
-    pvs="/dev/{{ block_device }}2"
+    pvs="{{ block_device }}2"
 
 - name: Setup the LV Logical Volume
   lvol:
@@ -25,13 +25,13 @@
     dev="/dev/data/{{ group_names[0] }}"
 
 - name: Is metadata partition zeroed out?
-  script: "../scripts/isheadzero.sh -d /dev/{{ block_device}}1 -s 128"
+  script: "../scripts/isheadzero.sh -d {{ block_device}}1 -s 128"
   register: headzero
   failed_when: "0 != headzero.rc and 1 != headzero.rc"
   changed_when: False
 
 - name: Zero-out the head of the metadata partition
-  shell: "dd if=/dev/zero of=/dev/{{ block_device }}1 bs=1M count=128"
+  shell: "dd if=/dev/zero of={{ block_device }}1 bs=1M count=128"
   when: not headzero.rc
 
 - name: Install DRBD
@@ -67,7 +67,7 @@
 
 - name: Invalidate DRBD on secondary node
   shell: "drbdadm invalidate {{ group_names[0] }}"
-  when: inventory_hostname.endswith('2')
+  when: "primary is not defined"
   register: invalidated
   # Don't fail on 'already syncing invalidation error'
   failed_when: "11 != invalidated.rc and 0 != invalidated.rc" 
@@ -76,14 +76,30 @@
 
 - name: Set DRBD primary
   shell: "drbdadm primary {{ group_names[0] }}"
-  when: inventory_hostname.endswith('1')
+  when: "primary is defined"
   register: primaryset
+  failed_when: "11 != primaryset.rc and 0 != primaryset.rc"
   changed_when: "0 != primaryset.rc"
   notify: restart drbd
 
 - name: Install Heartbeat
   apt:
     pkg=heartbeat
+    state=present
+
+- name: Install Python development package
+  apt:
+    name=python-dev
+    state=present
+
+- name: Install PIP package manager
+  apt:
+    name=python-pip
+    state=present
+
+- name: Install NovaClient
+  pip:
+    name=python-novaclient
     state=present
 
 - name: Install Heartbeat OpenStack script
@@ -116,6 +132,7 @@
     owner=root
     group=root
     mode=0600
+  notify: restart heartbeat
 
 - name: Configure Heartbeat
   template:

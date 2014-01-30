@@ -1,0 +1,5 @@
+---
+drupal_version: 7.26
+drupal_database: plaza
+drupal_username: drupalcore
+drupal_passwd: drupalpass

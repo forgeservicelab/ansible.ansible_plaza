@@ -8,9 +8,6 @@
   file:
     path=/etc/nginx/tls
     state=directory
-#  shell:
-#    mkdir -p /etc/nginx/tls
-#    creates=/etc/nginx/tls
 
 - name: Upload certificate file
   copy:
@@ -19,7 +16,6 @@
     owner=root
     group=root
     mode=0644
-
   notify:
     - restart nginx
 
@@ -30,7 +26,6 @@
     owner=root
     group=root
     mode=0600
-
   notify:
     - restart nginx
 
@@ -41,7 +36,6 @@
     owner=root
     group=root
     mode=0644
-
   notify:
     - restart nginx
 
@@ -55,7 +49,6 @@
     dest=/etc/default/haproxy
     regexp=^ENABLED
     line='ENABLED=1'
-
   notify:
     - restart haproxy
 
@@ -66,6 +59,15 @@
     owner=root
     group=root
     mode=0644
-
   notify:
     - restart haproxy
+
+- name: Ensure nginx is up
+  service:
+    name=nginx
+    state=started
+
+- name: Ensure haproxy is up
+  service:
+    name=haproxy
+    state=started
