@@ -52,17 +52,17 @@
   roles:
     - loadbalancer
 
-- hosts: mysql
-  sudo: True
-  remote_user: debian
-  roles:
-    - mysql
-
 - hosts: nfs
   sudo: True
   remote_user: debian
   roles:
     - nfs
+
+- hosts: mysql
+  sudo: True
+  remote_user: debian
+  roles:
+    - mysql
 
 - hosts: drupal
   sudo: True

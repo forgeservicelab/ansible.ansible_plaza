@@ -24,8 +24,28 @@
     name=php5-mysql
     state=present
 
+- name: Install PHP CAS library
+  apt:
+    name=php-cas
+    state=present
+
+- name: Install PHP LDAP library
+  apt:
+    name=php5-ldap
+    state=present
+
 - name: Enable Apache's mod rewrite
   shell: a2enmod rewrite
+  notify: restart apache
+
+- name: Enable Apache's SSL
+  shell: a2enmod ssl
+  notify: restart apache
+
+- name: Temporarily stop Apache for local configuration
+  service:
+    name=apache2
+    state=stopped
   notify: restart apache
 
 - name: umount the NFS share in case it's been corrupted by previous configuration
@@ -46,8 +66,33 @@
     state=mounted
   notify: restart apache
 
-- name: Configure Apache
+- name: Create tls directory for apache
+  file:
+    path=/etc/apache2/tls
+    state=directory
+
+- name: Upload certificate file
   copy:
+    src=../{{ certificate_path }}/{{ certificate_prefix }}.crt
+    dest=/etc/apache2/{{ certificate_path }}/{{ certificate_prefix }}.crt
+    owner=root
+    group=root
+    mode=0644
+  notify:
+    - restart apache
+
+- name: Upload certificate key file
+  copy:
+    src=../{{ certificate_path }}/{{ certificate_prefix }}.key
+    dest=/etc/apache2/{{ certificate_path }}/{{ certificate_prefix }}.key
+    owner=root
+    group=root
+    mode=0600
+  notify:
+    - restart apache
+
+- name: Configure Apache
+  template:
     src=../templates/apache.j2
     dest=/etc/apache2/sites-available/default
     owner=root
@@ -91,12 +136,133 @@
   when: "primary is defined and not drupal.stat.exists"
   notify: restart apache
 
+- name: Check wheter the CAS module is already installed
+  stat:
+    path=/var/www/sites/all/modules/cas
+  register: cas
+
+- name: Get CAS module
+  shell: wget http://ftp.drupal.org/files/projects/cas-{{ cas_version }}.tar.gz
+    chdir=/tmp
+    creates=/tmp/cas-{{ cas_version }}.tar.gz
+  when: "primary is defined and not cas.stat.exists"
+
+- name: Unpack CAS module
+  shell: tar xzf /tmp/cas-{{ cas_version }}.tar.gz
+    chdir=/var/www/sites/all/modules
+    creates=/var/www/sites/all/modules/cas
+  when: "primary is defined and not cas.stat.exists"
+
+- name: Check whether the CAS Attributes module is installed
+  stat:
+    path=/var/www/sites/all/modules/cas_attributes
+  register: cas_attributes
+
+- name: Get CAS Attributes module
+  shell: wget http://ftp.drupal.org/files/projects/cas_attributes-{{ cas_attributes_version}}.tar.gz
+    chdir=/tmp
+    creates=/tmp/cas_attributes-{{ cas_attributes_version }}.tar.gz
+  when: "primary is defined and not cas_attributes.stat.exists"
+
+- name: Unpack CAS Attributes module
+  shell: tar xzf /tmp/cas_attributes-{{ cas_attributes_version }}.tar.gz
+    chdir=/var/www/sites/all/modules
+    creates=/var/www/sites/all/modules/cas_attributes
+  when: "primary is defined and not cas_attributes.stat.exists"
+
+- name: Check whether the LDAP module is installed
+  stat:
+    path=/var/www/sites/all/modules/ldap
+  register: ldap
+
+- name: Get LDAP module
+  shell: wget http://ftp.drupal.org/files/projects/ldap-7.x-2.0-beta8.tar.gz
+    chdir=/tmp
+    creates=/tmp/ldap-{{ ldap_version }}.tar.gz
+  when: "primary is defined and not ldap.stat.exists"
+
+- name: Unpack LDAP module
+  shell: tar xzf /tmp/ldap-{{ ldap_version }}.tar.gz
+    chdir=/var/www/sites/all/modules
+    creates=/var/www/sites/all/modules/ldap
+  when: "primary is defined and not ldap.stat.exists"
+
+- name: Check wheter the ctools module is installed
+  stat:
+    path=/var/www/sites/all/modules/ctools
+  register: ctools
+
+- name: Get ctools module
+  shell: wget http://ftp.drupal.org/files/projects/ctools-{{ ctools_version }}.tar.gz
+    chdir=/tmp
+    creates=/tmp/ctools-{{ ctools_version }}.tar.gz
+  when: "primary is defined and not ctools.stat.exists"
+
+- name: Unpack ctools module
+  shell: tar xzf /tmp/ctools-{{ ctools_version }}.tar.gz
+    chdir=/var/www/sites/all/modules
+    creates=/var/www/sites/all/modules/ctools
+  when: "primary is defined and not ctools.stat.exists"
+
+- name: Check whether the entity API module is installed
+  stat:
+    path=/var/www/sites/all/modules/entity
+  register: entity
+
+- name: Get entity API module
+  shell: wget http://ftp.drupal.org/files/projects/entity-{{ entity_api_version }}.tar.gz
+    chdir=/tmp
+    creates=/tmp/entity-{{ entity_api_version }}.tar.gz
+  when: "primary is defined and not entity.stat.exists"
+
+- name: Unpack entity API module
+  shell: tar xzf /tmp/entity-{{ entity_api_version }}.tar.gz
+    chdir=/var/www/sites/all/modules
+    creates=/var/www/sites/all/modules/entity
+  when: "primary is defined and not entity.stat.exists"
+
+- name: Check whether the token module is installed
+  stat:
+    path=/var/www/sites/all/modules/token
+  register: token
+
+- name: Get token module
+  shell: wget http://ftp.drupal.org/files/projects/token-{{ token_version }}.tar.gz
+    chdir=/tmp
+    creates=/tmp/token-{{ token_version }}.tar.gz
+  when: "primary is defined and not token.stat.exists"
+
+- name: Unpack token module
+  shell: tar xzf /tmp/token-{{ token_version }}.tar.gz
+    chdir=/var/www/sites/all/modules
+    creates=/var/www/sites/all/modules/token
+  when: "primary is defined and not token.stat.exists"
+
+- name: Check whether the Role Delegation module is installed
+  stat:
+    path=/var/www/sites/all/modules/role_delegation
+  register: role
+
+- name: Get Role Delegation module
+  shell: wget http://ftp.drupal.org/files/projects/role_delegation-{{ role_delegation_version }}.tar.gz
+    chdir=/tmp
+    creates=/tmp/role_delegation-{{ role_delegation_version }}.tar.gz
+  when: "primary is defined and not role.stat.exists"
+
+- name: Unpack Role Delegation module
+  shell: tar xzf /tmp/role_delegation-{{ role_delegation_version }}.tar.gz
+    chdir=/var/www/sites/all/modules
+    creates=/var/www/sites/all/modules/role_delegation
+  when: "primary is defined and not role.stat.exists"
+
 - name: Remove empty drupal directory
   file:
     path=/tmp/drupal-{{ drupal_version }}
     state=absent
   when: "primary is defined"
   notify: restart apache
+
+# clean up /tmp
 
 - name: Generate settings.php file
   shell: cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
@@ -108,7 +274,7 @@
   lineinfile:
     dest=/var/www/sites/default/settings.php
     insertafter="^# \$base_url"
-    line="$base_url http://{{ plaza_domain }};"
+    line="$base_url https://{{ plaza_domain }};"
   when: "primary is defined"
   notify: restart apache
 

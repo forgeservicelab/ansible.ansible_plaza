@@ -10,6 +10,11 @@
     state=stopped
   notify: restart heartbeat
 
+- name: Release DRBD resources for local configuration
+  service:
+    name=drbd
+    state=stopped
+
 - name: Stop and disable NFS kernel server
   service:
     name=nfs-kernel-server
@@ -37,7 +42,7 @@
 - name: Temporary mount of the DRBD device
   mount:
     name=/data
-    src=/dev/drbd0
+    src=/dev/drdb0
     fstype=ext4
     state=mounted
   when: "primary is defined"

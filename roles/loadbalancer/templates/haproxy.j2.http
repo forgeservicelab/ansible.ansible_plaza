@@ -18,17 +18,13 @@ defaults
         clitimeout 50000
         srvtimeout 50000
 
-listen  unsecured *:80
-	redirect prefix https://{{ plaza_domain }}
+listen  plaza 127.0.0.1:8080
+	option httpchk *
+	balance roundrobin
+	cookie SERVERID insert indirect nocache
 
-listen  plaza *:443
-	mode tcp
-	option tcplog
-	option ssl-hello-chk
-	balance source
-
-	server inst1 {{ hostvars['tdpl1']['ansible_default_ipv4']['address'] }}:443 check inter 2000 fall 3
-	server inst2 {{ hostvars['tdpl2']['ansible_default_ipv4']['address'] }}:443 check inter 2000 fall 3
+	server inst1 {{ hostvars['tdpl1']['ansible_default_ipv4']['address'] }}:80 cookie plaza01 check inter 2000 fall 3
+	server inst2 {{ hostvars['tdpl2']['ansible_default_ipv4']['address'] }}:80 cookie plaza02 check inter 2000 fall 3
 
 	capture cookie ASPSESSION len 32
 	srvtimeout 20000
