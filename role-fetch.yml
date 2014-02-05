@@ -1,0 +1,34 @@
+- hosts: 127.0.0.1
+  sudo: False
+  connection: local
+
+  tasks:
+  - name: get common role from gitlab
+    git:
+      repo=https://git.forgeservicelab.fi/ansible-roles/common.git
+      dest=roles/common
+
+  - name: get load balancer role from gitlab
+    git:
+      repo=https://git.forgeservicelab.fi/ansible-roles/load-balancer.git
+      dest=roles/loadbalancer
+
+  - name: get drupal role from gitlab
+    git:
+      repo=https://git.forgeservicelab.fi/ansible-roles/drupal.git
+      dest=roles/drupal
+
+  - name: get ha-disk role from gitlab
+    git:
+      repo=https://git.forgeservicelab.fi/ansible-roles/ha-disk.git
+      dest=roles/ha-disk
+
+  - name: get mysql role from gitlab
+    git:
+      repo=https://git.forgeservicelab.fi/ansible-roles/mysql.git
+      dest=roles/mysql
+
+  - name: get nfs role from gitlab
+    git:
+      repo=https://git.forgeservicelab.fi/ansible-roles/nfs.git
+      dest=roles/nfs

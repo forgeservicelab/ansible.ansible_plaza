@@ -1,0 +1,10 @@
+---
+- hosts: nfs:mysql
+  sudo: True
+
+  tasks:
+  - name: show block devices
+    debug:
+      msg=""Partitions:" {{ ansible_devices[item].partitions.keys() }}"
+    with_items: ansible_devices.keys()
+    when: "ansible_devices[item].partitions"
