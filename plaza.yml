@@ -37,11 +37,6 @@
   - name: Persist router IP var across plays
     shell: "echo '{{ ROUTER_PUBLIC_IP }}' > roles/ha-disk/vars/router_ip"
 
-- hosts: loadbalancer
-  sudo: True
-  roles:
-    - loadbalancer
-
 - hosts: nfs
   sudo: True
   roles:
@@ -56,6 +51,11 @@
   sudo: True
   roles:
     - drupal
+
+- hosts: loadbalancer
+  sudo: True
+  roles:
+    - loadbalancer
 
 - hosts: 127.0.0.1
   sudo: False
