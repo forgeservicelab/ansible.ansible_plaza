@@ -37,36 +37,23 @@
   - name: Persist router IP var across plays
     shell: "echo '{{ ROUTER_PUBLIC_IP }}' > roles/ha-disk/vars/router_ip"
 
-- hosts: loadbalancer:drupal:nfs:mysql
-  sudo: True
-  remote_user: debian
-  pre_tasks:
-  - name: Update APT
-    apt:
-      update_cache=yes
-      cache_valid_time=43200
-
 - hosts: loadbalancer
   sudo: True
-  remote_user: debian
   roles:
     - loadbalancer
 
 - hosts: nfs
   sudo: True
-  remote_user: debian
   roles:
     - nfs
 
 - hosts: mysql
   sudo: True
-  remote_user: debian
   roles:
     - mysql
 
 - hosts: drupal
   sudo: True
-  remote_user: debian
   roles:
     - drupal
 
