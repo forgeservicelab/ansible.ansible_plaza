@@ -31,6 +31,8 @@ If the target environment is **not** OpenStack, remember to set the `IS_TARGET_O
 The `drupal` role configures an NFS mount on the webservers to host the drupal installation, the target NFS server IP is set via the `NFS_VIRTUAL_IP` role variable and it corresponds to the virtual or floating IP assigned to the NFS HA cluster.
 Drupal webservers handle SSL termination, remember to add your `certificate.crt` and `certificate.key` files under `roles/drupal/files` and set the value of the `certificate_prefix` variable (in this example it would be `certificate`).
 
+The `common` role defines the `web_domain` and is used by the `load-balancer` roles, this variable is unset by default. Read the roles' `README.md` files for more information on role variables.
+
 It is required, for the four machines supporting the two HA clusters to have a cinder volume attached. The playbook defaults the location of this volume on the `vdb` block device. It is highly recommended to run the `list-partitions` playbook to identify the actual device location on each of the virtual machines and override the defaults with the `block_device` variable. The `list-partitions` playbook will report unpartitioned devices as skipped results.
 
 ## NOTES:
