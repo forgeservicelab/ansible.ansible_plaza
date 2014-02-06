@@ -10,7 +10,7 @@
       dest=roles/{{ item }}
     with_items:
       - common
-      - loadbalancer
+      - load-balancer
       - drupal
       - ha-disk
       - mysql

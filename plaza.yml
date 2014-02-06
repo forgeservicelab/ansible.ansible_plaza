@@ -1,49 +1,15 @@
 ---
-- hosts: 127.0.0.1
-  sudo: False
-  vars_prompt:
-  - name: "OS_PROJECT"
-    prompt: "Before we begin we need to get some environment specific information, please fill in the following:\nTarget OpenStack project name"
-    private: no
-  - name: "OS_USERNAME"
-    prompt: "OpenStack management username"
-    private: no
-  - name: "OS_PASSWORD"
-    prompt: "OpenStack management password"
-    private: yes
-  - name: "NFS_FLOAT_IP"
-    prompt: "Floating IP for the NFS cluster"
-    private: no
-  - name: "SQL_FLOAT_IP"
-    prompt: "Floating IP for the MySQL cluster"
-    private: no
-  - name: "ROUTER_PUBLIC_IP"
-    prompt: "Public IP of the network router"
-    private: no
-
-  connection: local
-
-  pre_tasks:
-  - name: Persist project var across plays
-    shell: "echo '{{ OS_PROJECT }}' > roles/ha-disk/vars/project"
-  - name: Persist username var across plays
-    shell: "echo '{{ OS_USERNAME }}' > roles/ha-disk/vars/user"
-  - name: Persist password var across plays
-    shell: "echo '{{ OS_PASSWORD }}' > roles/ha-disk/vars/pwd"
-  - name: Persist nfs floating IP var across plays
-    shell: "echo '{{ NFS_FLOAT_IP }}' > roles/nfs/vars/float_ip"
-  - name: Persist sql floating IP var across plays
-    shell: "echo '{{ SQL_FLOAT_IP }}' > roles/mysql/vars/float_ip"
-  - name: Persist router IP var across plays
-    shell: "echo '{{ ROUTER_PUBLIC_IP }}' > roles/ha-disk/vars/router_ip"
-
 - hosts: nfs
   sudo: True
+  vars_files:
+    - vars/main.yml
   roles:
     - nfs
 
 - hosts: mysql
   sudo: True
+  vars_files:
+    - vars/main.yml
   roles:
     - mysql
 
@@ -55,34 +21,4 @@
 - hosts: loadbalancer
   sudo: True
   roles:
-    - loadbalancer
-
-- hosts: 127.0.0.1
-  sudo: False
-  connection: local
-
-  post_tasks:
-  - name: Local cleanup(1)
-    file:
-      path=roles/ha-disk/vars/project
-      state=absent
-  - name: Local cleanup(2)
-    file:
-      path=roles/ha-disk/vars/user
-      state=absent
-  - name: Local cleanup(3)
-    file:
-      path=roles/ha-disk/vars/pwd
-      state=absent
-  - name: Local cleanup(4)
-    file:
-      path=roles/nfs/vars/float_ip
-      state=absent
-  - name: Local cleanup(5)
-    file:
-      path=roles/mysql/vars/float_ip
-      state=absent
-  - name: Local cleanup(6)
-    file:
-      path=roles/ha-disk/vars/router_ip
-      state=absent
+    - load-balancer
