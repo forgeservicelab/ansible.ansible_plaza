@@ -1,15 +1,16 @@
 127.0.0.1
 
-loadbalancer ansible_ssh_host=192.168.128.3
+loadbalancer ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
 
 [drupal]
-drupal1 ansible_ssh_host=192.168.128.4 primary=yes
-drupal2 ansible_ssh_host=192.168.128.5
+drupal1 ansible_ssh_host=<ipaddr> primary=yes ansible_ssh_user=<usrname>
+drupal2 ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
 
 [nfs]
-nfs1 ansible_ssh_host=192.168.128.6 primary=yes
-nfs2 ansible_ssh_host=192.168.128.7
+nfs1 ansible_ssh_host=<ipaddr> primary=yes ansible_ssh_user=<usrname>
+nfs2 ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
 
 [mysql]
-mysql1 ansible_ssh_host=192.168.128.8 primary=yes
-mysql2 ansible_ssh_host=192.168.128.9
+mysql1 ansible_ssh_host=<ipaddr> primary=yes ansible_ssh_user=<usrname>
+mysql2 ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
+
