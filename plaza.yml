@@ -5,6 +5,8 @@
     - vars/main.yml
   roles:
     - nfs
+  tags:
+    - nfs
 
 - hosts: mysql
   sudo: True
@@ -12,13 +14,19 @@
     - vars/main.yml
   roles:
     - mysql
+  tags:
+    - mysql
 
 - hosts: drupal
   sudo: True
   roles:
+    - drupal
+  tags:
     - drupal
 
 - hosts: loadbalancer
   sudo: True
   roles:
     - load-balancer
+  tags:
+    - loadbalancer
