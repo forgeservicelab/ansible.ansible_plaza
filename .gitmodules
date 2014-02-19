@@ -1,0 +1,18 @@
+[submodule "roles/common"]
+	path = roles/common
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/common.git
+[submodule "roles/load-balancer"]
+	path = roles/load-balancer
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/load-balancer.git
+[submodule "roles/drupal"]
+	path = roles/drupal
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/drupal.git
+[submodule "roles/ha-disk"]
+	path = roles/ha-disk
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/ha-disk.git
+[submodule "roles/mysql"]
+	path = roles/mysql
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/mysql.git
+[submodule "roles/nfs"]
+	path = roles/nfs
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/nfs.git
