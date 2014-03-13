@@ -43,3 +43,10 @@ This playbook is written to connect to the target machines under the `debian` us
 The ha-disk role provides an `hb_auth` variable for the NFS and MySQL clusters; these are for heartbeat authorization and, although it works as-is, it is recommended to override it on the inventory file setting it to any random string and preferably defining different values for the nfs and mysql host groups.
 
 Remember to override your system's default inventory location by running `ansible-playbook` with the `-i` flag.
+
+### Re-deploying drupal on an existing environment
+No variables are needed to redeploy drupal on an already set up environment, all you need to do is run the following:
+
+```
+$ ansible-playbook -i plaza.inventory -t redeploy plaza.yml
+```
