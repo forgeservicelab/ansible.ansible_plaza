@@ -19,6 +19,8 @@
 
 - hosts: drupal
   sudo: True
+  vars_files:
+    - vars/main.yml
   roles:
     - drupal
   tags:
