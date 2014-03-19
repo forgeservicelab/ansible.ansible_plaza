@@ -28,8 +28,10 @@ If the target environment for this playbook is deployed in OpenStack, it is nece
 
 If the target environment is **not** OpenStack, remember to set the `IS_TARGET_OPENSTACK` variable to `False` in `vars/main.yml`.
 
-The `drupal` role configures an NFS mount on the webservers to host the drupal installation, the target NFS server IP is set via the `NFS_VIRTUAL_IP` role variable and it corresponds to the virtual or floating IP assigned to the NFS HA cluster.
-Drupal webservers handle SSL termination, remember to add your `certificate.crt` and `certificate.key` files under `roles/drupal/files` and set the value of the `certificate_prefix` variable (in this example it would be `certificate`).
+On OpenStack environments, special care needs to be taken with security groups as every VM specified above needs to talk to each other, this is usually allowed by the `default` security group. In addition, communication from the router needs to be allowed; the reason for this is that when a VM communicates with another via the latter's Floating IP it appears to come from the router's public interface. Allowing this kind of connection is easily accomplished by adding a rule to allow TCP connections from the router's public IP.
+
+The `drupal` role configures an NFS mount on the webservers to host the drupal installation, the target NFS server IP is set via the `NFS_VIRTUAL_IP` role variable and it corresponds to the virtual or floating IP assigned to the NFS HA cluster. It also needs to connect to a MySQL backend whose IP is set via the `MySQL_VIRTUAL_IP` role variable which, likewise, corresponds to the virtual or floating IP assigned to the MySQL HA cluster.
+Drupal webservers handle SSL termination, remember to add your `certificate.crt`, `certificate.key` and `certificate.chain.pem` files under `roles/drupal/files` and set the value of the `certificate_prefix` variable (in this example it would be `certificate`).
 
 The `common` role defines the `web_domain` and is used by the `load-balancer` roles, this variable is unset by default. Read the roles' `README.md` files for more information on role variables.
 
