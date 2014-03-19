@@ -38,7 +38,7 @@ The `common` role defines the `web_domain` and is used by the `load-balancer` ro
 It is required, for the four machines supporting the two HA clusters to have a cinder volume attached. The playbook defaults the location of this volume on the `vdb` block device. It is highly recommended to run the `list-partitions` playbook to identify the actual device location on each of the virtual machines and override the defaults with the `block_device` variable. The `list-partitions` playbook will report unpartitioned devices as skipped results.
 
 ## NOTES:
-The variables described above are declared but undefined. Running the playbook without assigning proper values to them will cause it to malfunction or break.
+The variables described above are declared but undefined. Running the playbook without assigning proper values to them will cause it to malfunction or break. Please **read the roles' README** files before running the playbook.
 
 This playbook is written to connect to the target machines under the `debian` user. It is possible to override this on a per-host basis on the inventory file via the `ansible_ssh_user` variable.
 
