@@ -8,7 +8,7 @@ This playbook expects all computing instances to be Debian! The playbook has bee
 
 The playbook expects a specific set of virtual machines for the environment, this set is as follows:
 
-  - One instance to act as the software load balancer
+  - At least one instance to act as the software load balancer; two are recommended.
   - Two instances to act as drupal webservers
   - Two instances to support the NFS HA cluster
   - Two instances to support the MySQL HA cluster

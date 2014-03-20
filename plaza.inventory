@@ -1,6 +1,8 @@
 127.0.0.1
 
-loadbalancer ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
+[loadbalancer]
+lb1 ansible_ssh_host=<ipaddr> primary=yes ansible_ssh_user=<usrname>
+lb2 ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
 
 [drupal]
 drupal1 ansible_ssh_host=<ipaddr> primary=yes ansible_ssh_user=<usrname>
