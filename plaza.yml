@@ -1,8 +1,6 @@
 ---
 - hosts: nfs
   sudo: True
-  vars_files:
-    - vars/main.yml
   roles:
     - nfs
   tags:
@@ -10,8 +8,6 @@
 
 - hosts: mysql
   sudo: True
-  vars_files:
-    - vars/main.yml
   roles:
     - mysql
   tags:
@@ -19,8 +15,6 @@
 
 - hosts: drupal
   sudo: True
-  vars_files:
-    - vars/main.yml
   roles:
     - drupal
   tags:
@@ -29,6 +23,6 @@
 - hosts: loadbalancer
   sudo: True
   roles:
-    - load-balancer
+    - ha-loadbalancer
   tags:
     - loadbalancer
