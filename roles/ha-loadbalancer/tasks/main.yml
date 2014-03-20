@@ -1,0 +1,8 @@
+---
+- name: Stop and disable HAProxy service
+  service:
+    name=haproxy
+    enabled=no
+    state=stopped
+  notify: restart heartbeat
+

@@ -16,3 +16,9 @@
 [submodule "roles/nfs"]
 	path = roles/nfs
 	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/nfs.git
+[submodule "roles/heartbeat"]
+	path = roles/heartbeat
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/heartbeat.git
+[submodule "roles/ha-loadbalancer"]
+	path = roles/ha-loadbalancer
+	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/ha-loadbalancer.git
