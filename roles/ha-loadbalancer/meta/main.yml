@@ -1,4 +1,0 @@
----
-dependencies:
-  - { role: load-balancer } 
-  - { role: heartbeat }
