@@ -15,4 +15,3 @@ nfs2 ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
 [mysql]
 mysql1 ansible_ssh_host=<ipaddr> primary=yes ansible_ssh_user=<usrname>
 mysql2 ansible_ssh_host=<ipaddr> ansible_ssh_user=<usrname>
-

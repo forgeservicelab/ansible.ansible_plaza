@@ -1,2 +1,20 @@
 ---
 IS_TARGET_OPENSTACK: True
+# OS_AUTH_URL: 
+# OS_USERNAME: 
+# OS_PASSWORD: 
+# OS_PROJECT: 
+# ALLOWED_IPS:
+#   - allowed.ip.nr.1
+#   - allowed.ip.nr.2
+# web_domain: 
+# NFS_VIRTUAL_IP: 
+# MySQL_VIRTUAL_IP: 
+# ROUTER_PUBLIC_IP: 
+# certificate_prefix: 
+# drupal_database: 
+# mailname: 
+# block_device: 
+# backends:
+#   - backend1
+#   - backend2
