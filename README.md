@@ -21,9 +21,8 @@ If the target environment for this playbook is deployed in OpenStack, it is nece
     + `OS_PROJECT` - The name of the OpenStack project.
     + `OS_USERNAME` - The user name of one management member of the OpenStack project.
     + `OS_PASSWORD` - The password matching the above user name.
-    + `ROUTER_PUBLIC_IP` - The public interface's IP on the OpenStack network router
 
-  - On both the `nfs` and `mysql` roles:
+  - On the `loadbalancer`, `nfs` and `mysql` roles:
     + `OS_FLOATIP` - The allocated floating IP for the HA cluster.
 
 If the target environment is **not** OpenStack, remember to set the `IS_TARGET_OPENSTACK` variable to `False` in `vars/main.yml`.
