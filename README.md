@@ -50,7 +50,7 @@ This playbook is written to connect to the target machines under the `debian` us
 
 The ha-disk role provides an `hb_auth` variable for the NFS and MySQL clusters; these are for heartbeat authorization and, although it works as-is, it is recommended to override it on the inventory file setting it to any random string and preferably defining different values for the nfs and mysql host groups.
 
-This playbook uses the ssh transport to clone git repositories. If your git ssh key is password protected, you'll need to add the following lines to your ansible configuration.
+This playbook uses the ssh transport to clone git repositories. To use your local ssh keypair to authenticate against git you'll need to add the following lines to your ansible configuration.
 
 ```
 [ssh_connection]
