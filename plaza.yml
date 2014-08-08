@@ -22,12 +22,9 @@
         update_cache: yes
       with_items:
         - php-pear
-    - shell: curl -sS https://getcomposer.org/installer | php
-    - shell: mv composer.phar /usr/local/bin/composer
   roles:
     - role: drush
       drush_install_mode: pear
-      drush_composer_user: "{{ ansible_user_id }}"
       drushrc:
         root: /var/www
     - drupal
