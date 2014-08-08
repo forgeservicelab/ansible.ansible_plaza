@@ -22,3 +22,6 @@
 [submodule "roles/ha-loadbalancer"]
 	path = roles/ha-loadbalancer
 	url = ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/ha-loadbalancer.git
+[submodule "roles/drush"]
+	path = roles/drush
+	url = https://github.com/Pheromone/ansible-drush.git

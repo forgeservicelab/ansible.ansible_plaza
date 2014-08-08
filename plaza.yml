@@ -15,7 +15,21 @@
 
 - hosts: drupal
   sudo: True
+  pre_tasks:
+    - apt:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+      with_items:
+        - php5
+        - curl
+    - shell: curl -sS https://getcomposer.org/installer | php
+    - shell: mv composer.phar /usr/local/bin/composer
   roles:
+    - role: drush
+      drush_composer_user: "{{ ansible_user_id }}"
+      drushrc:
+        root: /var/www
     - drupal
   tags:
     - drupal
