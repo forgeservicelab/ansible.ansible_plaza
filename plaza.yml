@@ -27,6 +27,7 @@
       drush_install_mode: pear
       drushrc:
         root: /var/www
+    - memcached
     - drupal
   tags:
     - drupal
