@@ -28,7 +28,15 @@
       drushrc:
         root: /var/www
     - role: memcached
-      memcached_cache_size: 1024
+      memcached_cache_size: 512
+    - role: memcached
+      memcached_instance_name: session
+      memcached_cache_size: 256
+      memcached_port: 11221
+    - role: memcached
+      memcached_instance_name: users
+      memcached_cache_size: 256
+      memcached_port: 11222
     - drupal
   tags:
     - drupal
