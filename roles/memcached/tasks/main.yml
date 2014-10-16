@@ -1,5 +1,8 @@
 ---
 
+- name: Create memcache user
+  user: name=memcache system=yes
+  
 - name: Install the memcached packages 
   yum: name={{ item }} state=present
   with_items: memcached_redhat_pkgs
