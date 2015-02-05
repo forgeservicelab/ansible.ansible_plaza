@@ -1,0 +1,25 @@
+127.0.0.1
+
+[loadbalancer]
+{% for item in loadbalancers %}
+{{ item.item.info.name }} ansible_ssh_host={{ item.item.private_ip }}{% if loop.index == 1 %} primary=yes{% endif %}
+
+{% endfor %}
+
+[drupal]
+{% for item in drupals %}
+{{ item.item.info.name }} ansible_ssh_host={{ item.item.private_ip }}{% if loop.index == 1 %} primary=yes{% endif %}
+
+{% endfor %}
+
+[nfs]
+{% for item in nfss %}
+{{ item.item.info.name }} ansible_ssh_host={{ item.item.private_ip }}{% if loop.index == 1 %} primary=yes{% endif %}
+
+{% endfor %}
+
+[mysql]
+{% for item in databases %}
+{{ item.item.info.name }} ansible_ssh_host={{ item.item.private_ip }}{% if loop.index == 1 %} primary=yes{% endif %}
+
+{% endfor %}

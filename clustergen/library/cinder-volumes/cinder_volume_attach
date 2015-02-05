@@ -1,0 +1,169 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+try:
+    from cinderclient.v2 import client as cinder_client
+    import time
+except ImportError:
+    print("failed=True msg='cinderclient is required for this module to work'")
+
+DOCUMENTATION = '''
+---
+module: cinder_volume_attach
+version_added: "1.8"
+short_description: Add/Remove volumes on a tenant
+description:
+   - Add or Remove a volume on a tenant.
+options:
+   login_username:
+     description:
+        - login username to authenticate to keystone
+     required: true
+     default: None
+   login_password:
+     description:
+        - Password of login user
+     required: true
+     default: None
+   login_tenant_name:
+     description:
+        - The tenant name of the login user
+     required: true
+     default: None
+   auth_url:
+     description:
+        - The keystone url for authentication
+     required: false
+     default: 'http://127.0.0.1:35357/v2.0/'
+   state:
+     description:
+        - Indicate desired state of the resource. If `absent` at least one of *id* or *name* is required
+     choices: ['present', 'absent']
+     default: present
+   id:
+     description:
+        - UUID of the volume
+     required: true
+     default: None
+   instance_id:
+     description:
+        - UUID of the attaching instance. Required if state is `present`
+     required: false
+     default: None
+   mountpoint:
+     description:
+        - Mount point on the attaching instance
+     required: false
+     default: /dev/vdb
+   mode:
+     description:
+        - The access mode
+     choices: ['ro', 'rw']
+     default: rw
+
+
+requirements: ["cinderclient"]
+'''
+
+EXAMPLES = '''
+# Attaches a volume to an instance
+  cinder_volume_attach:
+    login_username: admin
+    login_password: admin
+    login_tenant_name: admin
+    id: c49758eb-6efb-4ae0-a2e0-a6a0ab4c50c6
+    instance_id: a6a0ab4c50c6-4ae0-6efb-a2e0-c49758eb
+    state: present
+
+# Detaches a volume
+  cinder_volume_attach:
+    login_username: admin
+    login_password: admin
+    login_tenant_name: admin
+    id: c49758eb-6efb-4ae0-a2e0-a6a0ab4c50c6
+    state: absent
+'''
+
+try:
+    from cinderclient.v2 import client as cinder_client
+    import time
+except ImportError:
+    print("failed=True msg='cinderclient is required for this module to work'")
+
+
+def _get_volume(module, cinder):
+    try:
+        return cinder.volumes.find(id=module.params['id'])
+    except Exception:
+        return None
+
+
+def _attach_volume(module, cinder):
+    try:
+        vol = _get_volume(module, cinder)
+        if vol:
+            if module.params['instance_id'] in map(lambda v: v['server_id'], vol.attachments):
+                module.exit_json(changed=False)
+            vol.attach(module.params['instance_id'], module.params['mountpoint'], module.params['mode'])
+            vol.get()
+        else:
+            module.fail_json(msg="Error attaching: No volume with id %s" % module.params['id'])
+    except Exception as e:
+        module.fail_json(msg="There was an error attaching the volume: %s" % e.message)
+    module.exit_json(changed=True, volume=dict(id=vol.id, size=vol.size, attachments=vol.attachments))
+
+
+def _detach_volume(module, cinder):
+    try:
+        vol = _get_volume(module, cinder)
+        if vol and vol.status == 'in-use':
+            vol.detach()
+            # wait for it...
+            timeout = time.time() + 60*5
+            while volume.status == 'in-use' or time.time() < timeout:
+                time.sleep(2)
+                volume.get()
+        else:
+            module.exit_json(changed=False)
+    except Exception as e:
+        module.fail_json(msg="There was an error detaching the volume: %s" % e.message)
+    module.exit_json(changed=True)
+
+
+def main():
+    """
+    Main function - entry point.
+
+    The magic starts here ;-)
+    """
+    module = AnsibleModule(
+        argument_spec=dict(
+            login_username=dict(required=True, aliases=["username"]),
+            login_password=dict(required=True, aliases=["password"]),
+            login_tenant_name=dict(required=True, aliases=["tenant_name"]),
+            auth_url=dict(default='http://127.0.0.1:35357/v2.0/'),
+            state=dict(default='present', choices=['absent', 'present']),
+            id=dict(required=True, default=None),
+            instance_id=dict(required=False, default=None),
+            mountpoint=dict(default='/dev/vdb'),
+            mode=dict(default='rw', choices=['rw', 'ro'])
+        )
+    )
+
+    try:
+        cinder = cinder_client.Client(module.params['login_username'], module.params['login_password'],
+                                      module.params['login_tenant_name'], module.params['auth_url'])
+    except Exception as e:
+        module.fail_json(msg="Error in authenticating to cinder: %s" % e.message)
+
+    if module.params['state'] == 'present':
+        if not module.params['instance_id']:
+            module.fail_json(msg="instance_id is required when requesting present state.")
+        _attach_volume(module, cinder)
+
+    if module.params['state'] == 'absent':
+        _detach_volume(module, cinder)
+
+# This is magic, see Ansible docs.
+from ansible.module_utils.basic import *
+main()

@@ -1,0 +1,264 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - instances.yml
+    - secgroups.yml
+    - ../group_vars/all-security.yml
+  tasks:
+    - name: Create security groups
+      neutron_sec_group:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: "{{ item.name }}"
+        description: "{{ item.description}}"
+        rules: "{{ item.rules }}"
+        state: present
+      with_items:
+        - "{{ secgroups }}"
+
+    - name: Create server group
+      nova_server_group:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: plaza-antiaffinity
+        policy: anti-affinity
+      register: server_group
+
+    - name: Create cluster network
+      quantum_network_with_tid:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: "{{ network_name }}"
+        tenant_id: "{{ OS_PROJECT }}"
+        state: present
+      register: network
+
+    - name: Create cluster subnet
+      quantum_subnet_with_tid:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        tenant_id: "{{ OS_PROJECT }}"
+        cidr: "{{ subnet_cidr }}"
+        dns_nameservers: 8.8.8.8,8.8.4.4
+        enable_dhcp: yes
+        name: "{{ network_name }}-subnet"
+        network_name: "{{ network_name }}"
+
+    - name: Create network router
+      quantum_router_with_tid:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: "{{ network_name }}"
+        tenant_id: "{{ OS_PROJECT }}"
+
+    - name: Add gateway interface
+      quantum_router_gateway:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        network_name: public
+        router_name: "{{ network_name }}"
+        state: present
+
+    - name: Add subnet interface
+      quantum_router_interface_with_tid:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        subnet_name: "{{ network_name }}-subnet"
+        router_name: "{{ network_name }}"
+        tenant_id: "{{ OS_PROJECT }}"
+        state: present
+
+    - name: Instantiate VMs
+      nova_compute_hint:
+        floating_ip_pools: "{{ item.floating_ip_pools | default(None) }}"
+        auth_url: "{{ OS_AUTH_URL }}"
+        flavor_id: "{{ item.flavor_id }}"
+        image_id: "{{ item.image_id }}"
+        key_name: "{{ OS_KEY_NAME }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: "{{ item.name }}"
+        nics:
+          - net-id: "{{ network.id }}"
+        security_groups: "{{ item.secgroups | default(None) }}"
+        scheduler_hints:
+          group: "{{ server_group.server_group.id }}"
+        state: present
+        meta:
+          name: "{{ item.name }}"
+      register: nova
+      with_items:
+        - "{{ instances }}"
+
+    - name: Instantiate Volumes
+      cinder_volume_create:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: "{{ item.name }}"
+        size: "{{ item.volume_size }}"
+      with_items:
+        - "{{ instances }}"
+      when: item.volume_size is defined
+      register: cinder
+
+    - name: Attach volumes
+      cinder_volume_attach:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        id: "{{ item.0 }}"
+        instance_id: "{{ item.1 }}"
+      with_together:
+        - "{{ cinder.results | selectattr('volume', 'defined') | sort(attribute='item.name') | map(attribute='volume.id') | list }}"
+        - "{{ nova.results | selectattr('item.volume_size', 'defined') | sort(attribute='item.name') | map(attribute='id') | list }}"
+
+    - name: Filter drupal floating ips
+      shell: ":"
+      register: drupal_ips
+      with_items: nova.results
+      when: '"drupal" in item.info.name'
+      changed_when: False
+
+    - name: Register drupal floating ips
+      set_fact:
+        allowed_ips: "{{ drupal_ips.results | selectattr('item', 'defined') | map(attribute='item.public_ip') | list }}"
+
+    - name: Filter database private instances
+      shell: ":"
+      register: database_ips
+      with_items: nova.results
+      when: '"database" in item.info.name'
+      changed_when: False
+
+    - name: Register database private instances
+      set_fact:
+        databases: "{{ database_ips.results | selectattr('item', 'defined') | list }}"
+
+    - name: Filter drupal private instances
+      shell: ":"
+      register: drupal_ips
+      with_items: nova.results
+      when: '"drupal" in item.info.name'
+      changed_when: False
+
+    - name: Register drupal private instances
+      set_fact:
+        drupals: "{{ drupal_ips.results | selectattr('item', 'defined') | list }}"
+
+    - name: Filter loadbalancer private instances
+      shell: ":"
+      register: loadbalancer_ips
+      with_items: nova.results
+      when: '"loadbalancer" in item.info.name'
+      changed_when: False
+
+    - name: Register loadbalancer private instances
+      set_fact:
+        loadbalancers: "{{ loadbalancer_ips.results | selectattr('item', 'defined') | list }}"
+
+    - name: Filter nfs private instances
+      shell: ":"
+      register: nfs_ips
+      with_items: nova.results
+      when: '"nfs" in item.info.name'
+      changed_when: False
+
+    - name: Register nfs private instances
+      set_fact:
+        nfss: "{{ nfs_ips.results | selectattr('item', 'defined') | list }}"
+
+    - name: Get default security group id
+      nova_secgroup_id:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: default
+      register: default_sg
+
+    - name: Update default security group
+      neutron_sec_group:
+        auth_url: "{{ OS_AUTH_URL }}"
+        login_username: "{{ OS_USERNAME }}"
+        login_password: "{{ OS_PASSWORD }}"
+        login_tenant_name: "{{ OS_PROJECT }}"
+        name: default
+        description: default
+        rules:
+          - direction: egress
+            ethertype: IPv4
+            remote_ip_prefix: 0.0.0.0/0
+          - direction: ingress
+            ethertype: IPv4
+            remote_group_id: "{{ default_sg.id }}"
+          - direction: egress
+            ethertype: IPv6
+            remote_ip_prefix: ::/0
+          - direction: ingress
+            ethertype: IPv6
+            remote_group_id: "{{ default_sg.id }}"
+          - direction: ingress
+            ethertype: IPv4
+            protocol: tcp
+            remote_ip_prefix: "{{ (drupal_ips.results | selectattr('item', 'defined') | map(attribute='item.public_ip') | sort)[0] }}/32"
+          - direction: ingress
+            ethertype: IPv4
+            protocol: tcp
+            remote_ip_prefix: "{{ (drupal_ips.results | selectattr('item', 'defined') | map(attribute='item.public_ip') | sort)[1] }}/32"
+
+    - name: Register NFS virtual IP
+      set_fact:
+        nfs_virtual_ip: "{{ item[1].public_ip }}"
+      with_nested:
+        - "{{ instances | selectattr('floating_ip_pools', 'defined') | list }}"
+        - "{{ nova.results }}"
+      when: 'item[0].name in item[1].info.name and "nfs" in item[0].name'
+
+    - name: Register Database virtual IP
+      set_fact:
+        database_virtual_ip: "{{ item[1].public_ip }}"
+      with_nested:
+        - "{{ instances | selectattr('floating_ip_pools', 'defined') | list }}"
+        - "{{ nova.results }}"
+      when: 'item[0].name in item[1].info.name and "database" in item[0].name'
+
+    - name: Register Cluster endpoint IP
+      set_fact:
+        entrypoint_ip: "{{ item[1].public_ip }}"
+      with_nested:
+        - "{{ instances | selectattr('floating_ip_pools', 'defined') | list }}"
+        - "{{ nova.results }}"
+      when: 'item[0].name in item[1].info.name and "loadbalancer" in item[0].name'
+
+    - name: Autogenerate cluster_vars file
+      template:
+        src: templates/generated_vars.j2
+        dest: ./generated/generated_vars
+
+    - name: Autogenerate ssh jump host configuration
+      template:
+        src: templates/ansible_ssh.j2
+        dest: ./generated/ansible.cfg
+    - name: Autogenerate inventory file
+      template:
+        src: templates/inventory
+        dest: ./generated/generated_inventory

@@ -1,0 +1,7 @@
+ALLOWED_IPS: {{ allowed_ips }}
+NFS_VIRTUAL_IP: {{ nfs_virtual_ip }}
+MySQL_VIRTUAL_IP: {{ database_virtual_ip}}
+
+# The following var is unused in the playbook and left here for reference
+# This is the public IP on which the cluster is accessible
+entrypoint_ip: {{ entrypoint_ip }}

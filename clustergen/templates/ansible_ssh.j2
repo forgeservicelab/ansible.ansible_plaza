@@ -1,0 +1,2 @@
+[ssh_connection]
+ssh_args = -o StrictHostKeyChecking=no -o ForwardAgent=yes -o 'ProxyCommand ssh -o StrictHostKeyChecking=no -q {{ entrypoint_ip }} nc -q0 %h %p'

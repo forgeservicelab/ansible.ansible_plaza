@@ -1,0 +1,143 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+DOCUMENTATION = '''
+---
+module: nova_server_group
+version_added: "1.8"
+short_description: Add/Remove server groups on a tenant
+description:
+   - Add or Remove a server group on a tenant.
+options:
+   login_username:
+     description:
+        - login username to authenticate to keystone
+     required: true
+     default: None
+   login_password:
+     description:
+        - Password of login user
+     required: true
+     default: None
+   login_tenant_name:
+     description:
+        - The tenant name of the login user
+     required: true
+     default: None
+   auth_url:
+     description:
+        - The keystone url for authentication
+     required: false
+     default: 'http://127.0.0.1:35357/v2.0/'
+   state:
+     description:
+        - Indicate desired state of the resource
+     choices: ['present', 'absent']
+     default: present
+   policy:
+     description:
+        - Affinity policy of the server group
+     choices: ['affinity', 'anti-affinity']
+     default: affinity
+   name:
+     description:
+        - Descriptive name of the server group.
+     required: true
+requirements['novaclient>=2.20.0']
+'''
+
+EXAMPLES = '''
+# Creates an affinity server group
+  nova_server_group:
+    login_username: admin
+    login_password: 1234
+    login_tenant_name: admin
+    name: affinity-group
+    policy: affinity
+
+# Deletes an existing server group
+  nova_server_group:
+    login_username: admin
+    login_password: 1234
+    login_tenant_name: admin
+    name: affinity-group
+    state: absent
+'''
+
+try:
+    from novaclient.v1_1 import client as nova_client
+except ImportError:
+    print ("failed=True msg='novaclient is required'")
+
+
+def _get_server_group(module, nova):
+    server_group = None
+    try:
+        for sg in nova.server_groups.list():
+            if sg:
+                if sg.name == module.params['name']:
+                    server_group = sg
+                    break
+    except Exception as e:
+        module.fail_json(msg="Error in getting the server list: %s" % e.message)
+    return server_group
+
+
+def _create_server_group(module, nova):
+    try:
+        server_group = nova.server_groups.create(name=module.params['name'], policies=[module.params['policy']])
+    except Exception as e:
+        module.fail_json(msg="There was an error creating the server group: %s" % e.message)
+    module.exit_json(changed=True, result=dict(server_group=dict(id=server_group.id,
+                     name=server_group.name, policies=server_group.policies)))
+
+
+def _delete_server_group(sg, module, nova):
+    try:
+        nova.server_groups.delete(sg.id)
+    except Exception as e:
+        module.fail_json(msg="There was an error deleting the server group: %s" % e.message)
+    module.exit_json(changed=True)
+
+
+def main():
+    """
+    Main function - entry point.
+
+    The magic starts here ;-)
+    """
+    module = AnsibleModule(
+        argument_spec=dict(
+            login_username=dict(required=True, aliases=["username"]),
+            login_password=dict(required=True, aliases=["password"]),
+            login_tenant_name=dict(required=True, aliases=["tenant_name"]),
+            auth_url=dict(default='http://127.0.0.1:35357/v2.0/'),
+            policy=dict(default='affinity', choices=['affinity', 'anti-affinity']),
+            name=dict(required=True),
+            state=dict(default='present', choices=['absent', 'present'])
+        )
+    )
+
+    try:
+        nova = nova_client.Client(module.params['login_username'], module.params['login_password'],
+                                  module.params['login_tenant_name'], module.params['auth_url'])
+    except Exception as e:
+        module.fail_json(msg="Error in authenticating to nova: %s" % e.message)
+
+    sg = _get_server_group(module, nova)
+    if module.params['state'] == 'present':
+        if sg:
+            if module.params['policy'] not in sg.policies:
+                module.fail_json(
+                    msg='A server group with the requested name exists but the policies don\'t match.')
+            module.exit_json(changed=False, server_group=dict(id=sg.id, name=sg.name, policies=sg.policies))
+        _create_server_group(module, nova)
+
+    if module.params['state'] == 'absent':
+        if sg:
+            _delete_server_group(sg, module, nova)
+        module.exit_json(changed=False)
+
+# This is magic, see Ansible docs.
+from ansible.module_utils.basic import *
+main()
