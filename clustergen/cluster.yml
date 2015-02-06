@@ -142,47 +142,47 @@
       set_fact:
         allowed_ips: "{{ drupal_ips.results | selectattr('item', 'defined') | map(attribute='item.public_ip') | list }}"
 
-    - name: Filter database private instances
+    - name: Filter database instances
       shell: ":"
       register: database_ips
       with_items: nova.results
       when: '"database" in item.info.name'
       changed_when: False
 
-    - name: Register database private instances
+    - name: Register database instances
       set_fact:
         databases: "{{ database_ips.results | selectattr('item', 'defined') | list }}"
 
-    - name: Filter drupal private instances
+    - name: Filter drupal instances
       shell: ":"
       register: drupal_ips
       with_items: nova.results
       when: '"drupal" in item.info.name'
       changed_when: False
 
-    - name: Register drupal private instances
+    - name: Register drupal instances
       set_fact:
         drupals: "{{ drupal_ips.results | selectattr('item', 'defined') | list }}"
 
-    - name: Filter loadbalancer private instances
+    - name: Filter loadbalancer instances
       shell: ":"
       register: loadbalancer_ips
       with_items: nova.results
       when: '"loadbalancer" in item.info.name'
       changed_when: False
 
-    - name: Register loadbalancer private instances
+    - name: Register loadbalancer instances
       set_fact:
         loadbalancers: "{{ loadbalancer_ips.results | selectattr('item', 'defined') | list }}"
 
-    - name: Filter nfs private instances
+    - name: Filter nfs instances
       shell: ":"
       register: nfs_ips
       with_items: nova.results
       when: '"nfs" in item.info.name'
       changed_when: False
 
-    - name: Register nfs private instances
+    - name: Register nfs instances
       set_fact:
         nfss: "{{ nfs_ips.results | selectattr('item', 'defined') | list }}"
 
@@ -218,36 +218,34 @@
             remote_group_id: "{{ default_sg.id }}"
           - direction: ingress
             ethertype: IPv4
-            protocol: tcp
-            remote_ip_prefix: "{{ (drupal_ips.results | selectattr('item', 'defined') | map(attribute='item.public_ip') | sort)[0] }}/32"
+            remote_ip_prefix: "{{ (allowed_ips | sort)[0] }}/32"
           - direction: ingress
             ethertype: IPv4
-            protocol: tcp
-            remote_ip_prefix: "{{ (drupal_ips.results | selectattr('item', 'defined') | map(attribute='item.public_ip') | sort)[1] }}/32"
+            remote_ip_prefix: "{{ (allowed_ips | sort)[1] }}/32"
 
     - name: Register NFS virtual IP
       set_fact:
-        nfs_virtual_ip: "{{ item[1].public_ip }}"
+        nfs_virtual_ip: "{{ item[0].item.public_ip }}"
       with_nested:
+        - "{{ nfss }}"
         - "{{ instances | selectattr('floating_ip_pools', 'defined') | list }}"
-        - "{{ nova.results }}"
-      when: 'item[0].name in item[1].info.name and "nfs" in item[0].name'
+      when: 'item[1].name in item[0].item.info.name'
 
     - name: Register Database virtual IP
       set_fact:
-        database_virtual_ip: "{{ item[1].public_ip }}"
+        database_virtual_ip: "{{ item[0].item.public_ip }}"
       with_nested:
+        - "{{ databases }}"
         - "{{ instances | selectattr('floating_ip_pools', 'defined') | list }}"
-        - "{{ nova.results }}"
-      when: 'item[0].name in item[1].info.name and "database" in item[0].name'
+      when: 'item[1].name in item[0].item.info.name'
 
     - name: Register Cluster endpoint IP
       set_fact:
-        entrypoint_ip: "{{ item[1].public_ip }}"
+        entrypoint_ip: "{{ item[0].item.public_ip }}"
       with_nested:
+        - "{{ loadbalancers }}"
         - "{{ instances | selectattr('floating_ip_pools', 'defined') | list }}"
-        - "{{ nova.results }}"
-      when: 'item[0].name in item[1].info.name and "loadbalancer" in item[0].name'
+      when: 'item[1].name in item[0].item.info.name'
 
     - name: Autogenerate cluster_vars file
       template:
@@ -258,6 +256,7 @@
       template:
         src: templates/ansible_ssh.j2
         dest: ./generated/ansible.cfg
+
     - name: Autogenerate inventory file
       template:
         src: templates/inventory
