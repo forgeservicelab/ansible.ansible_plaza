@@ -1,5 +1,5 @@
 # Fetch modules:
-- src: https://github.com/openstack-ansible/openstack-ansible-modules.git
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-modules/openstack-ansible-modules.git
   path: clustergen/library/
 
 - src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-modules/patched-core-modules.git
