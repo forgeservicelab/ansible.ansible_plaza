@@ -30,11 +30,17 @@
 - src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/nfs.git
   path: roles/
 
+- src: ThePixelDeveloper.composer
+  path: roles/
+  name: composer
+
 - src: https://github.com/Pheromone/ansible-drush.git
-  path: roles/drush
+  path: roles/
+  name: drush
 
 - src: bennojoy.memcached
-  path: roles/memcached
+  path: roles/
+  name: memcached
 
 - src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/drupal.git
   path: roles/

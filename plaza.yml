@@ -41,14 +41,13 @@
   - include_vars: clustergen/generated/generated_vars
     when: "{{ include_autogen | default(True) }}"
   - apt:
-      name: "{{ item }}"
+      name: curl
       state: latest
       update_cache: yes
-    with_items:
-    - php-pear
   roles:
+  - role: composer
   - role: drush
-    drush_install_mode: pear
+    drush_install_mode: git
     drushrc:
       root: /var/www
   - role: memcached
@@ -80,6 +79,9 @@
 
 - hosts: localhost
   connection: local
+  pre_tasks:
+  - include_vars: clustergen/generated/generated_vars
+    when: "{{ include_autogen | default(True) }}"
   tasks:
-    - debug:
-        msg: "Update your DNS records or hosts file so that {{ web_domain }} points to {{ entrypoint_ip }}"
+  - debug:
+      msg: "Update your DNS records or hosts file so that {{ web_domain }} points to {{ entrypoint_ip }}"
