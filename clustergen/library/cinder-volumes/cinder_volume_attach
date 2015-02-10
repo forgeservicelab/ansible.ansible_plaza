@@ -47,20 +47,24 @@ options:
      default: None
    instance_id:
      description:
-        - UUID of the attaching instance. Required if state is `present`
-     required: false
+        - UUID of the attaching instance
+     required: true
      default: None
    mountpoint:
      description:
         - Mount point on the attaching instance
      required: false
      default: /dev/vdb
-   mode:
+   wait:
      description:
-        - The access mode
-     choices: ['ro', 'rw']
-     default: rw
-
+        - If the module should wait for the Volume to be attached/detached
+     required: false
+     default: 'yes'
+   wait_for:
+     description:
+        - The amount of time the module should wait for the Volume to get attached/detached
+     required: false
+     default: 180
 
 requirements: ["cinderclient"]
 '''
@@ -86,9 +90,10 @@ EXAMPLES = '''
 
 try:
     from cinderclient.v2 import client as cinder_client
+    from novaclient.v1_1 import client as nova_client
     import time
 except ImportError:
-    print("failed=True msg='cinderclient is required for this module to work'")
+    print("failed=True msg='cinderclient and novaclient are required for this module to work'")
 
 
 def _get_volume(module, cinder):
@@ -98,14 +103,22 @@ def _get_volume(module, cinder):
         return None
 
 
-def _attach_volume(module, cinder):
+def _attach_volume(module, cinder, nova):
     try:
         vol = _get_volume(module, cinder)
         if vol:
             if module.params['instance_id'] in map(lambda v: v['server_id'], vol.attachments):
                 module.exit_json(changed=False)
-            vol.attach(module.params['instance_id'], module.params['mountpoint'], module.params['mode'])
+            nova.volumes.create_server_volume(module.params['instance_id'], module.params['id'], module.params['mountpoint'])
             vol.get()
+            if module.params['wait']:
+                # wait for it...
+                timeout = time.time() + module.params['wait_for']
+                while vol.status != 'in-use' and time.time() < timeout:
+                    time.sleep(2)
+                    vol.get()
+                if time.time() > timeout:
+                    module.fail_json(msg="Timed out before volume was detached")
         else:
             module.fail_json(msg="Error attaching: No volume with id %s" % module.params['id'])
     except Exception as e:
@@ -113,16 +126,19 @@ def _attach_volume(module, cinder):
     module.exit_json(changed=True, volume=dict(id=vol.id, size=vol.size, attachments=vol.attachments))
 
 
-def _detach_volume(module, cinder):
+def _detach_volume(module, cinder, nova):
     try:
         vol = _get_volume(module, cinder)
         if vol and vol.status == 'in-use':
-            vol.detach()
-            # wait for it...
-            timeout = time.time() + 60*5
-            while volume.status == 'in-use' or time.time() < timeout:
-                time.sleep(2)
-                volume.get()
+            nova.volumes.delete_server_volume(module.params['instance_id'], module.params['id'])
+            if module.params['wait']:
+                # wait for it...
+                timeout = time.time() + module.params['wait_for']
+                while vol.status == 'in-use' and time.time() < timeout:
+                    time.sleep(2)
+                    vol.get()
+                if time.time() > timeout:
+                    module.fail_json(msg="Timed out before volume was detached")
         else:
             module.exit_json(changed=False)
     except Exception as e:
@@ -144,9 +160,10 @@ def main():
             auth_url=dict(default='http://127.0.0.1:35357/v2.0/'),
             state=dict(default='present', choices=['absent', 'present']),
             id=dict(required=True, default=None),
-            instance_id=dict(required=False, default=None),
+            instance_id=dict(required=True, default=None),
             mountpoint=dict(default='/dev/vdb'),
-            mode=dict(default='rw', choices=['rw', 'ro'])
+            wait=dict(default='yes', choices=['yes', 'no']),
+            wait_for=dict(default=180)
         )
     )
 
@@ -155,14 +172,19 @@ def main():
                                       module.params['login_tenant_name'], module.params['auth_url'])
     except Exception as e:
         module.fail_json(msg="Error in authenticating to cinder: %s" % e.message)
+    try:
+        nova = nova_client.Client(module.params['login_username'], module.params['login_password'],
+                                  module.params['login_tenant_name'], auth_url=module.params['auth_url'])
+    except Exception as e:
+        module.fail_json(msg="Error in authenticating to nova: %s" % e.message)
 
     if module.params['state'] == 'present':
         if not module.params['instance_id']:
             module.fail_json(msg="instance_id is required when requesting present state.")
-        _attach_volume(module, cinder)
+        _attach_volume(module, cinder, nova)
 
     if module.params['state'] == 'absent':
-        _detach_volume(module, cinder)
+        _detach_volume(module, cinder, nova)
 
 # This is magic, see Ansible docs.
 from ansible.module_utils.basic import *

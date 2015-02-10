@@ -1,1 +1,3 @@
 ansible.cfg
+forgeservicelab.fi.key
+host_vars

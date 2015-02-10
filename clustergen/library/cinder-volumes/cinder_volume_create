@@ -92,6 +92,16 @@ options:
      description:
         - arbitrary key-value pairs specified by the client to help boot an instance
      required: false
+   wait:
+     description:
+        - If the module should wait for the Volume to be created.
+     required: false
+     default: 'yes'
+   wait_for:
+     description:
+        - The amount of time the module should wait for the Volume to get into active state or to be detached if state is `absent` and force is `yes`
+     required: false
+     default: 180
 
 requirements: ["cinderclient"]
 '''
@@ -139,6 +149,14 @@ def _create_volume(module, cinder):
         }
 
         vol = cinder.volumes.create(module.params['size'], **kwargs)
+        if module.params['wait']:
+            timeout = time.time() + module.params['wait_for']
+            while vol.status == 'creating' and time.time() < timeout:
+                time.sleep(2)
+                vol.get()
+            if time.time() > timeout:
+                module.fail_json(msg="Timed out before volume came out of 'creating' state")
+            
     except Exception as e:
         module.fail_json(msg="There was an error creating the volume: %s" % e.message)
     module.exit_json(changed=True, volume=dict(id=vol.id, size=vol.size))
@@ -150,10 +168,12 @@ def _delete_volume(volume, module, cinder):
         if volume.status == 'in-use' and module.params['force']:
             volume.detach()
             # wait for it...
-            timeout = time.time() + 60*5
-            while volume.status == 'in-use' or time.time() < timeout:
+            timeout = time.time() + module.params['wait_for']
+            while volume.status == 'in-use' and time.time() < timeout:
                 time.sleep(2)
                 volume.get()
+            if time.time() > timeout:
+                module.fail_json(msg="Timed out before volume was detached")
         volume.delete()
     except Exception as e:
         module.fail_json(msg="There was an error deleting the volume: %s" % e.message)
@@ -184,6 +204,8 @@ def main():
             meta=dict(required=False),
             image_ref=dict(required=False),
             source_volid=dict(required=False),
+            wait=dict(default='yes', choices=['yes', 'no']),
+            wait_for=dict(default=180),
             scheduler_hints=dict(required=False)
         )
     )

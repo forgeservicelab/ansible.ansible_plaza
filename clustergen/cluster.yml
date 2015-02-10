@@ -4,7 +4,6 @@
   vars_files:
     - instances.yml
     - secgroups.yml
-    - ../group_vars/all-security.yml
   tasks:
     - name: Create security groups
       neutron_sec_group:

@@ -1,49 +1,85 @@
 ---
+- hosts: nfs:mysql
+  sudo: True
+
+  tasks:
+  - name: register block devices
+    connection: local
+    lineinfile:
+      dest: "host_vars/{{ ansible_hostname }}.yml"
+      create: yes
+      line: "block_device: /dev/{{item}}"
+      insertbefore: BOF
+    with_items: ansible_devices.keys()
+    when: "not ansible_devices[item].partitions and IS_TARGET_OPENSTACK"
+
 - hosts: nfs
   sudo: True
+  pre_tasks:
+  - include_vars: clustergen/generated/generated_vars
+    when: "{{ include_autogen | default(True) }}"
   roles:
-    - nfs
+  - role: nfs
+    OS_FLOATIP: "{{ NFS_VIRTUAL_IP }}"
   tags:
-    - nfs
+  - nfs
 
 - hosts: mysql
   sudo: True
+  pre_tasks:
+  - include_vars: clustergen/generated/generated_vars
+    when: "{{ include_autogen | default(True) }}"
   roles:
-    - mysql
+  - role: mysql
+    OS_FLOATIP: "{{ MySQL_VIRTUAL_IP }}"
   tags:
-    - mysql
+  - mysql
 
 - hosts: drupal
   sudo: True
   pre_tasks:
-    - apt:
-        name: "{{ item }}"
-        state: latest
-        update_cache: yes
-      with_items:
-        - php-pear
+  - include_vars: clustergen/generated/generated_vars
+    when: "{{ include_autogen | default(True) }}"
+  - apt:
+      name: "{{ item }}"
+      state: latest
+      update_cache: yes
+    with_items:
+    - php-pear
   roles:
-    - role: drush
-      drush_install_mode: pear
-      drushrc:
-        root: /var/www
-    - role: memcached
-      memcached_cache_size: 512
-    - role: memcached
-      memcached_instance_name: session
-      memcached_cache_size: 256
-      memcached_port: 11221
-    - role: memcached
-      memcached_instance_name: users
-      memcached_cache_size: 256
-      memcached_port: 11222
-    - drupal
+  - role: drush
+    drush_install_mode: pear
+    drushrc:
+      root: /var/www
+  - role: memcached
+    memcached_cache_size: 512
+  - role: memcached
+    memcached_instance_name: session
+    memcached_cache_size: 256
+    memcached_port: 11221
+  - role: memcached
+    memcached_instance_name: users
+    memcached_cache_size: 256
+    memcached_port: 11222
+  - role: drupal
+    certificate_prefix: forgeservicelab.fi
+    mailname: forgeservicelab.fi
   tags:
-    - drupal
+  - drupal
 
 - hosts: loadbalancer
   sudo: True
+  pre_tasks:
+  - include_vars: clustergen/generated/generated_vars
+    when: "{{ include_autogen | default(True) }}"
   roles:
-    - ha-loadbalancer
+  - role: ha-loadbalancer
+    OS_FLOATIP: "{{ entrypoint_ip }}"
   tags:
-    - loadbalancer
+  - loadbalancer
+
+- hosts: localhost
+  connection: local
+  tasks:
+    - debug:
+        msg: "Update your DNS records or hosts file so that {{ web_domain }} points to {{ entrypoint_ip }}"

@@ -1,6 +1,13 @@
-ALLOWED_IPS: {{ allowed_ips }}
+ALLOWED_IPS:
+{% for allowed_ip in allowed_ips %}
+  - {{ allowed_ip }}
+{% endfor %}
 NFS_VIRTUAL_IP: {{ nfs_virtual_ip }}
 MySQL_VIRTUAL_IP: {{ database_virtual_ip}}
+backends:
+{% for item in drupals %}
+- {{ item.item.private_ip }}
+{% endfor %}
 
 # The following var is unused in the playbook and left here for reference
 # This is the public IP on which the cluster is accessible

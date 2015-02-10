@@ -1,0 +1,46 @@
+# Fetch modules:
+- src: https://github.com/openstack-ansible/openstack-ansible-modules.git
+  path: clustergen/library/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-modules/patched-core-modules.git
+  path: clustergen/library/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-modules/security-group-id.git
+  path: clustergen/library/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-modules/server-groups.git
+  path: clustergen/library/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-modules/cinder-volumes.git
+  path: clustergen/library/
+
+# Fetch roles:
+- src: bennojoy.memcached
+  path: roles/memcached
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/common.git
+  path: roles/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/load-balancer.git
+  path: roles/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/drupal.git
+  path: roles/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/ha-disk.git
+  path: roles/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/mysql.git
+  path: roles/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/nfs.git
+  path: roles/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/heartbeat.git
+  path: roles/
+
+- src: git+ssh://gitlab@git.forgeservicelab.fi:10022/ansible-roles/ha-loadbalancer.git
+  path: roles/
+
+- src: https://github.com/Pheromone/ansible-drush.git
+  path: roles/drush

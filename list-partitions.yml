@@ -5,6 +5,6 @@
   tasks:
   - name: show block devices
     debug:
-      msg=""Partitions:" {{ ansible_devices[item].partitions.keys() }}"
+      msg="{{item}}"
     with_items: ansible_devices.keys()
-    when: "ansible_devices[item].partitions"
+    when: "not ansible_devices[item].partitions"
