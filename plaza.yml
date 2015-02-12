@@ -76,12 +76,3 @@
     OS_FLOATIP: "{{ entrypoint_ip }}"
   tags:
   - loadbalancer
-
-- hosts: localhost
-  connection: local
-  pre_tasks:
-  - include_vars: clustergen/generated/generated_vars
-    when: "{{ include_autogen | default(True) }}"
-  tasks:
-  - debug:
-      msg: "Update your DNS records or hosts file so that {{ web_domain }} points to {{ entrypoint_ip }}"
