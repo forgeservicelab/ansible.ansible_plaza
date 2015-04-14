@@ -6,7 +6,7 @@
   - name: register block devices
     connection: local
     lineinfile:
-      dest: "host_vars/{{ ansible_hostname }}.yml"
+      dest: "host_vars/{{ inventory_hostname }}"
       create: yes
       line: "block_device: /dev/{{item}}"
       insertbefore: BOF
@@ -41,9 +41,13 @@
   - include_vars: clustergen/generated/generated_vars
     when: "{{ include_autogen | default(True) }}"
   - apt:
-      name: curl
+      name: "{{ item }}"
       state: latest
       update_cache: yes
+    with_items: 
+      - curl 
+      - php5
+      - git
   roles:
   - role: composer
   - role: drush
