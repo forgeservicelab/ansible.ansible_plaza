@@ -87,7 +87,7 @@
         floating_ip_pools: "{{ item.floating_ip_pools | default(None) }}"
         auth_url: "{{ OS_AUTH_URL }}"
         flavor_id: "{{ item.flavor_id }}"
-        image_id: "{{ item.image_id }}"
+        image_name: "{{ item.image_name }}"
         key_name: "{{ OS_KEY_NAME }}"
         login_username: "{{ OS_USERNAME }}"
         login_password: "{{ OS_PASSWORD }}"
