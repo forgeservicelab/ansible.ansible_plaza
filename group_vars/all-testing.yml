@@ -1,0 +1,20 @@
+---
+IS_TARGET_OPENSTACK: True
+OS_AUTH_URL: https://cloud.forgeservicelab.fi:5001/v2.0
+OS_USERNAME: <YOUR OPENSTACK USERNAME>
+OS_PASSWORD: <YOUR OPENSTACK PASSWORD>
+OS_PROJECT: <YOUR OPENSTACK PROJECT>
+ALLOWED_IPS:
+  - 193.166.24.165
+  - 193.166.24.190
+web_domain: testing.forgeservicelab.fi
+NFS_VIRTUAL_IP: 193.166.24.153
+MySQL_VIRTUAL_IP: 193.166.24.154
+ROUTER_PUBLIC_IP: 193.166.24.152
+certificate_prefix: forgeservicelab.fi
+drupal_database: forgeweb
+mailname: forgeservicelab.fi
+block_device: /dev/vdb
+backends:
+  - "{{ hostvars['drupal1']['ansible_ssh_host'] }}"
+  - "{{ hostvars['drupal2']['ansible_ssh_host'] }}"

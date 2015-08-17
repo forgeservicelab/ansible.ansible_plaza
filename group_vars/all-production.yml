@@ -1,0 +1,20 @@
+---
+IS_TARGET_OPENSTACK: False
+OS_AUTH_URL: https://cloud.forgeservicelab.fi:5001/v2.0
+OS_USERNAME: <YOUR OPENSTACK USERNAME>
+OS_PASSWORD: <YOUR OPENSTACK PASSWORD>
+OS_PROJECT: <YOUR OPENSTACK PROJECT>
+ALLOWED_IPS:
+  - 86.50.28.4
+  - 86.50.28.5
+web_domain: forgeservicelab.fi
+NFS_VIRTUAL_IP: nfs.forgeservicelab.fi
+MySQL_VIRTUAL_IP: mysql.forgeservicelab.fi
+ROUTER_PUBLIC_IP: 
+certificate_prefix: forgeservicelab.fi
+drupal_database: plaza_production
+mailname: forgeservicelab.fi
+block_device: /dev/sdb
+backends:
+  - drupal01.forgeservicelab.fi
+  - drupal02.forgeservicelab.fi

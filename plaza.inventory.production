@@ -1,0 +1,21 @@
+127.0.0.1
+
+[loadbalancer]
+lb1 ansible_ssh_host=192.168.2.21 primary=yes
+lb2 ansible_ssh_host=192.168.2.22
+
+[drupal]
+drupal1 ansible_ssh_host=drupal01.forgeservicelab.fi
+drupal2 ansible_ssh_host=drupal02.forgeservicelab.fi primary=yes
+
+[nfs]
+nfs1 ansible_ssh_host=nfs01.forgeservicelab.fi primary=yes
+nfs2 ansible_ssh_host=nfs02.forgeservicelab.fi
+
+[mysql]
+mysql1 ansible_ssh_host=mysql01.forgeservicelab.fi primary=yes
+mysql2 ansible_ssh_host=mysql02.forgeservicelab.fi
+
+[loadbalancer:vars]
+entrypoint_ip=193.166.24.185
+IS_TARGET_OPENSTACK=True

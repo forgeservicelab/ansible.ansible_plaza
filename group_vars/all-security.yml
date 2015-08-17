@@ -1,0 +1,43 @@
+---
+IS_TARGET_OPENSTACK: True
+# OS_AUTH_URL: # URL of OpenStack's keystone service
+
+# IMPORTANT!!
+# The following two variables hold credentials that will be written
+# as plaintext on configuration files on the target machines.
+# OS_USERNAME: # Username of OpenStack account allowed to make changes
+# OS_PASSWORD: # Password for the account above
+
+# OS_PROJECT: # OpenStack project holding the target VMs
+# ALLOWED_IPS: # List of IPs allowed to use the HA backends typically the webserver public IPs. Fill in below
+#   - allowed.ip.nr.1 # Public (floating) IP of the first webserver
+#   - allowed.ip.nr.2 # Public (floating) IP of the second webserver
+# web_domain: # FQDN of the provisioned website
+# NFS_VIRTUAL_IP: # Service IP for the NFS HA cluster
+# MySQL_VIRTUAL_IP: # Service IP for the MySQL HA cluster
+# certificate_prefix: # Name of the SSL certificate files up to but not including file extension
+# drupal_database: # Name of the database for Drupal
+# mailname: # FQDN for Drupal's outgoing mail server
+# block_device: # Device descriptor of the data disk for HA clusters. DO NOT set here if it is not the same on all target machines.
+# backends: #List of webservers as seen from the loadbalancer. Fill below.
+#   - backend1 # FQDN or IP of the first webserver
+#   - backend2 # FQDN or IP of the second webserver
+secgroup_prefix: PLAZA_SECURITY
+webserver_flavor: ad726f02-2551-4202-8bad-093abe99b35c
+loadbalancer_flavor: e95a2210-a9b2-4085-be15-683af356f48f
+backend_flavor: 82326aee-1832-42ff-9992-42062c5d29c9
+webserver_image: Debian-7.7-server-amd64
+loadbalancer_image: Debian-7.7-server-amd64
+backend_image: Debian-7.7-server-amd64
+
+network_name: plaza-security
+subnet_cidr: 192.168.235.0/28
+
+OS_AUTH_URL: https://cloud.forgeservicelab.fi:5001/v2.0
+OS_USERNAME: <YOUR OPENSTACK USERNAME>
+OS_PASSWORD: <YOUR OPENSTACK PASSWORD>
+OS_PROJECT: <YOUR OPENSTACK PROJECT>
+OS_KEY_NAME: <YOUR OPENSTACK KEY NAME>
+
+web_domain: security.forgeservicelab.fi
+drupal_database: plaza-security

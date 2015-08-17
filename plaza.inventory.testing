@@ -1,0 +1,20 @@
+127.0.0.1
+
+[loadbalancer]
+lb1 ansible_ssh_host=192.168.128.18 primary=yes
+lb2 ansible_ssh_host=192.168.128.19
+
+[drupal]
+drupal1 ansible_ssh_host=192.168.128.12 primary=yes
+drupal2 ansible_ssh_host=192.168.128.13
+
+[nfs]
+nfs1 ansible_ssh_host=192.168.128.16 primary=yes
+nfs2 ansible_ssh_host=192.168.128.17
+
+[mysql]
+mysql1 ansible_ssh_host=192.168.128.14 primary=yes
+mysql2 ansible_ssh_host=192.168.128.15
+
+[loadbalancer:vars]
+entrypoint_ip=193.166.24.155
